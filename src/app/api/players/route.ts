@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
         });
 
         // Transform to include current session info
-        const playersWithStatus = players.map((player) => ({
+        const playersWithStatus = players.map((player: (typeof players)[number]) => ({
             ...player,
             currentSession: player.sessionPlayers[0]?.session || null,
             sessionPlayers: undefined,
