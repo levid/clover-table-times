@@ -1,0 +1,189 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Table {
+  id                String    @id @default(cuid())
+  name              String
+  tableNumber       Int       @unique
+  status            TableStatus @default(AVAILABLE)
+  hourlyRate        Float     @default(15.00)
+  timeLimitMinutes  Int?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  sessions          Session[]
+}
+
+model Player {
+  id        String   @id @default(cuid())
+  name      String
+  phone     String?
+  email     String?
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  sessionPlayers SessionPlayer[]
+}
+
+model Session {
+  id            String        @id @default(cuid())
+  tableId       String
+  table         Table         @relation(fields: [tableId], references: [id], onDelete: Cascade)
+  startTime     DateTime      @default(now())
+  endTime       DateTime?
+  pausedAt      DateTime?
+  totalPausedMs Int           @default(0)
+  totalMinutes  Float?
+  totalCharge   Float?
+  status        SessionStatus @default(ACTIVE)
+  cloverOrderId String?
+  notes         String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  players       SessionPlayer[]
+  payments      Payment[]
+
+  @@index([tableId])
+  @@index([status])
+}
+
+model SessionPlayer {
+  id        String   @id @default(cuid())
+  sessionId String
+  session   Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  playerId  String
+  player    Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  joinedAt  DateTime @default(now())
+  leftAt    DateTime?
+
+  @@unique([sessionId, playerId])
+  @@index([sessionId])
+  @@index([playerId])
+}
+
+model Settings {
+  id                  String   @id @default(cuid())
+  merchantId          String?  @unique
+  defaultHourlyRate   Float    @default(15.00)
+  minimumCharge       Float    @default(5.00)
+  gracePeriodMinutes  Int      @default(0)
+  billingIncrement    BillingIncrement @default(MINUTE)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+enum TableStatus {
+  AVAILABLE
+  OCCUPIED
+  RESERVED
+  MAINTENANCE
+}
+
+enum SessionStatus {
+  ACTIVE
+  PAUSED
+  COMPLETED
+  CANCELLED
+}
+
+enum BillingIncrement {
+  MINUTE
+  QUARTER_HOUR
+  HALF_HOUR
+  HOUR
+}
+
+model WaitlistEntry {
+  id          String    @id @default(cuid())
+  name        String
+  partySize   Int       @default(1)
+  phone       String?
+  notes       String?
+  status      WaitlistStatus @default(WAITING)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  seatedAt    DateTime?
+  cancelledAt DateTime?
+
+  @@index([status])
+}
+
+enum WaitlistStatus {
+  WAITING
+  NOTIFIED
+  SEATED
+  CANCELLED
+  NO_SHOW
+}
+
+model CloverToken {
+  id           String    @id @default(cuid())
+  merchantId   String    @unique
+  accessToken  String
+  refreshToken String?
+  expiresAt    DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model Payment {
+  id              String        @id @default(cuid())
+  sessionId       String?
+  session         Session?      @relation(fields: [sessionId], references: [id])
+  cloverOrderId   String?       @unique
+  cloverPaymentId String?       @unique
+  amount          Int           // cents
+  tipAmount       Int           @default(0) // cents
+  totalAmount     Int           // amount + tip in cents
+  status          PaymentStatus @default(PENDING)
+  paymentMethod   String?       // card, cash, split
+  customerEmail   String?
+  customerPhone   String?
+  receiptSent     Boolean       @default(false)
+  refundedAmount  Int           @default(0) // cents refunded
+  refundReason    String?
+  refundedAt      DateTime?
+  notes           String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([sessionId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model PaymentQueue {
+  id            String           @id @default(cuid())
+  sessionId     String?
+  tableName     String
+  amount        Int              // cents
+  tipAmount     Int              @default(0)
+  status        QueueStatus      @default(PENDING)
+  retryCount    Int              @default(0)
+  lastError     String?
+  processedAt   DateTime?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  @@index([status])
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+enum QueueStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
