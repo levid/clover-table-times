@@ -13,17 +13,15 @@ interface TimerProps {
 }
 
 export function Timer({ startTime, pausedAt, totalPausedMs, isPaused = false, className = '', style }: TimerProps) {
-    const [elapsed, setElapsed] = useState(0);
-
     const calculateElapsed = useCallback(() => {
         const start = new Date(startTime);
         const paused = pausedAt ? new Date(pausedAt) : null;
         return getElapsedSeconds(start, totalPausedMs, paused);
     }, [startTime, pausedAt, totalPausedMs]);
 
-    useEffect(() => {
-        setElapsed(calculateElapsed());
+    const [elapsed, setElapsed] = useState(calculateElapsed());
 
+    useEffect(() => {
         if (isPaused) return;
 
         const interval = setInterval(() => {

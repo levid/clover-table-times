@@ -23,7 +23,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
             },
         });
 
-        return NextResponse.json(sessionPlayers.map(sp => ({
+        type SessionPlayerWithPlayer = typeof sessionPlayers[number];
+
+        return NextResponse.json(sessionPlayers.map((sp: SessionPlayerWithPlayer) => ({
             ...sp.player,
             joinedAt: sp.joinedAt,
             leftAt: sp.leftAt,

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthenticatedCloverClient } from '@/lib/clover-tokens';
+import { CloverPayment } from '@/lib/clover-client';
 
 interface RouteParams {
     params: Promise<{ id: string }>;
@@ -28,7 +29,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         const payments = await client.getOrderPayments(orderId);
 
         const hasPaidPayments = payments.elements?.some(
-            (p: any) => p.result === 'SUCCESS'
+            (p: CloverPayment) => p.result === 'SUCCESS'
         );
 
         return NextResponse.json({

@@ -37,12 +37,23 @@ interface CloverLineItem {
     unitQty: number;
 }
 
-interface CloverPayment {
+export interface CloverPayment {
     id: string;
     orderId: string;
     amount: number;
     tipAmount: number;
     result: 'SUCCESS' | 'FAIL' | 'PENDING';
+}
+
+export interface CloverRefund {
+    id: string;
+    amount: number;
+    currency?: string;
+    createdTime?: number;
+    payment: {
+        id: string;
+    };
+    reason?: string;
 }
 
 export class CloverClient {
@@ -263,8 +274,8 @@ export class CloverClient {
     /**
      * Get all refunds for a merchant
      */
-    async getRefunds(limit: number = 50): Promise<{ elements: any[] }> {
-        return this.request<{ elements: any[] }>('GET', `/refunds?limit=${limit}`);
+    async getRefunds(limit: number = 50): Promise<{ elements: CloverRefund[] }> {
+        return this.request<{ elements: CloverRefund[] }>('GET', `/refunds?limit=${limit}`);
     }
 
     /**

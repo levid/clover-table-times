@@ -36,8 +36,11 @@ export async function GET() {
             },
         });
 
+        type TableWithSessionAndPlayers = typeof tables[number];
+        type SessionPlayerWithPlayer = typeof tables[number]['sessions'][number]['players'][number];
+
         // Transform to include currentSession with players
-        const tablesWithSession = tables.map((table) => {
+        const tablesWithSession = tables.map((table: TableWithSessionAndPlayers) => {
             const session = table.sessions[0];
             return {
                 id: table.id,
@@ -58,7 +61,7 @@ export async function GET() {
                         totalCharge: session.totalCharge,
                         status: session.status,
                         notes: session.notes,
-                        players: session.players.map((sp) => ({
+                        players: session.players.map((sp: SessionPlayerWithPlayer) => ({
                             id: sp.player.id,
                             name: sp.player.name,
                             phone: sp.player.phone,

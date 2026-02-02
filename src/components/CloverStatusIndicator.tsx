@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Wifi, WifiOff, RefreshCw, ExternalLink } from 'lucide-react';
 
 interface CloverStatus {
@@ -13,14 +13,7 @@ export function CloverStatusIndicator() {
     const [status, setStatus] = useState<CloverStatus | null>(null);
     const [isChecking, setIsChecking] = useState(false);
 
-    useEffect(() => {
-        checkStatus();
-        // Re-check every 60 seconds
-        const interval = setInterval(checkStatus, 60000);
-        return () => clearInterval(interval);
-    }, []);
-
-    const checkStatus = async () => {
+    const checkStatus = useCallback(async () => {
         setIsChecking(true);
         try {
             const res = await fetch('/api/clover/status');
@@ -30,7 +23,18 @@ export function CloverStatusIndicator() {
             setStatus({ configured: false, connected: false });
         }
         setIsChecking(false);
-    };
+    }, []); // Empty dependency array means this function is created once
+
+    useEffect(() => {
+        const initStatusCheck = async () => {
+            await checkStatus();
+        };
+        initStatusCheck();
+
+        // Re-check every 60 seconds
+        const interval = setInterval(checkStatus, 60000);
+        return () => clearInterval(interval);
+    }, [checkStatus]); // Add checkStatus to the dependency array
 
     const handleReconnect = () => {
         window.location.href = '/api/clover/oauth';

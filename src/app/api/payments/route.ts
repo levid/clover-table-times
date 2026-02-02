@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import type { Prisma } from '@prisma/client';
+import { PaymentStatus } from '@prisma/client';
 
 /**
  * GET /api/payments
@@ -13,10 +15,11 @@ export async function GET(request: NextRequest) {
         const limit = parseInt(searchParams.get('limit') || '50');
         const offset = parseInt(searchParams.get('offset') || '0');
 
-        const where: any = {};
+        const where: Prisma.PaymentWhereInput = {};
         if (sessionId) where.sessionId = sessionId;
-        if (status) where.status = status;
-
+        if (status && Object.values(PaymentStatus).includes(status as PaymentStatus)) {
+            where.status = status as PaymentStatus;
+        }
         const [payments, total] = await Promise.all([
             prisma.payment.findMany({
                 where,

@@ -2,6 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getAuthenticatedCloverClient } from '@/lib/clover-tokens';
 
+interface CloverWebhookEvent {
+    objectId: string;
+    ts: number;
+    // Add other common properties if known, or more specific types for 'APP' event later
+    type?: string; // For 'APP' events
+}
+
 /**
  * POST /api/clover/webhooks
  * Handle Clover webhook events for order and payment updates
@@ -38,7 +45,7 @@ export async function POST(request: NextRequest) {
     }
 }
 
-async function handleWebhookEvent(merchantId: string, type: string, event: any) {
+async function handleWebhookEvent(merchantId: string, type: string, event: CloverWebhookEvent) {
     const { objectId, ts } = event;
 
     console.log(`Processing ${type} event for merchant ${merchantId}:`, objectId);

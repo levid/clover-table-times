@@ -51,9 +51,11 @@ export async function GET(request: NextRequest) {
             orderBy: { createdAt: 'desc' },
         });
 
+        type PaymentWithSessionAndTable = typeof payments[number];
+
         // Calculate totals
         const totals = payments.reduce(
-            (acc, p) => ({
+            (acc: { revenue: number; tips: number; refunds: number; count: number }, p: PaymentWithSessionAndTable) => ({
                 revenue: acc.revenue + p.amount,
                 tips: acc.tips + p.tipAmount,
                 refunds: acc.refunds + p.refundedAmount,
@@ -101,7 +103,7 @@ export async function GET(request: NextRequest) {
                 })),
                 byHour: period === 'day' ? byHour : undefined,
             },
-            recentPayments: payments.slice(0, 10).map(p => ({
+            recentPayments: payments.slice(0, 10).map((p: PaymentWithSessionAndTable) => ({
                 id: p.id,
                 amount: p.totalAmount,
                 tip: p.tipAmount,
